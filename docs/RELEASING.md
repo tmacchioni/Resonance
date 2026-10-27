@@ -25,12 +25,19 @@ For external component updates, follow [DEPENDENCIES.md](DEPENDENCIES.md). Depen
 
 The `Publish release` workflow runs on `v*` tags. It checks that the tag matches the configured version, builds dependencies from pinned source archives, tests all formats, builds the universal app, creates and verifies Ed25519 archive signatures, signs the feed, packages corresponding sources, uploads all artifacts to a draft release, then publishes it as latest.
 
+First change `Config/Release.json` to version `1.2.0` and an increased build such as `120`, update the release notes, and commit those files. Then create the tag on that new commit:
+
 ```sh
+git add Config/Release.json docs/RELEASE_NOTES.md
+git commit -m "Prepare release 1.2.0"
+git push origin main
 git tag v1.2.0
 git push origin v1.2.0
 ```
 
-Before tagging, update release notes and configuration, run the checks and review the final diff. The workflow needs the `SPARKLE_PRIVATE_KEY` repository secret. Untrusted pull requests never receive signing secrets.
+A tag selects a fixed commit: editing `main` afterwards or re-running a failed job does not change the configuration inside an existing tag. If a published release/tag has incorrect metadata, preserve it and prepare a new patch version on a corrected commit. Creating an empty GitHub release is not required; the workflow creates and publishes the release with all assets after verification.
+
+Before tagging, run the checks and review the final diff. The workflow needs the `SPARKLE_PRIVATE_KEY` repository secret. Untrusted pull requests never receive signing secrets.
 
 The source archive must remain attached to every binary release. Preserve previous releases so users can retrieve the sources corresponding to their installed version. yt-dlp and Sparkle retain their upstream licenses and bundled notices; their pinned source repositories are linked in the README and notice file.
 

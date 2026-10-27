@@ -20,13 +20,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_REPOSITORY: ${{ github.repository }}
-        run: |
-          python3 - <<'PY'
-          import json, os
-          config = json.load(open('Config/Release.json'))
-          assert os.environ['RELEASE_TAG'] == 'v' + config['version'], 'Tag must match Config/Release.json'
-          assert os.environ['RELEASE_REPOSITORY'] == config['repository'], 'Configure the repository for this fork before releasing'
-          PY
+        run: python3 scripts/validate-release.py
       - name: Build dependencies and run checks
         run: |
           python3 -m unittest discover -s Tests -p 'test_*.py'
