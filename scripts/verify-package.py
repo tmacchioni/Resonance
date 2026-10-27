@@ -7,6 +7,7 @@ import plistlib
 import re
 import subprocess
 import tempfile
+from dependency_manifest import Manifest
 
 root = Path(__file__).resolve().parent.parent
 app = root / 'dist/Resonance.app'
@@ -28,6 +29,8 @@ assert info['SURequireSignedFeed'] is True
 for language in ['it', 'en']:
     assert (app / f'Contents/Resources/{language}.lproj/Localizable.strings').is_file()
 assert (app / 'Contents/Frameworks/Sparkle.framework').is_dir()
+inventory = json.loads((app / 'Contents/Resources/Licenses/Dependencies.json').read_text())
+assert inventory == Manifest().resolved(), 'Packaged dependencies must match the manifest'
 assert not any(path.name == 'deno' for path in tools.rglob('*'))
 assert set(output('lipo', '-archs', app / 'Contents/MacOS/Resonance').split()) == {'arm64', 'x86_64'}
 for arch in ['arm64', 'x86_64']:

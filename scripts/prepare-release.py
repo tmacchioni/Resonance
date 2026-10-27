@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import tarfile
 import xml.etree.ElementTree as ET
+from dependency_manifest import Manifest, SOURCE_COMPONENTS
 
 ROOT = Path(__file__).resolve().parent.parent
 SPARKLE = 'http://www.andymatuschak.org/xml-namespaces/sparkle'
@@ -48,11 +49,10 @@ def prepare():
     sources = dist / f'Resonance-{version}-third-party-sources.tar.xz'
     with tarfile.open(sources, 'w:xz') as tar:
         # Include all source inputs, licenses and exact build recipes for the media tools.
-        manifest = json.loads((ROOT / 'vendor/manifest.json').read_text())
-        for asset in manifest['assets']:
-            if asset['file'].startswith(('ffmpeg-', 'lame-', 'opus-', 'quickjs-')):
-                tar.add(ROOT / 'vendor/cache' / asset['file'], arcname='sources/' + asset['file'])
-        for path in [ROOT / 'vendor/manifest.json', ROOT / 'vendor/licenses', ROOT / 'scripts/build-media.py', ROOT / 'scripts/build-runtime.py']:
+        manifest = Manifest()
+        for name in SOURCE_COMPONENTS:
+            tar.add(manifest.verified_archive(name), arcname=str(manifest.cache_path(name).relative_to(ROOT)))
+        for path in [ROOT / 'vendor/manifest.json', ROOT / 'Config/Release.json', ROOT / 'vendor/licenses', ROOT / 'scripts/build-media.py', ROOT / 'scripts/build-runtime.py', ROOT / 'scripts/dependency_manifest.py', ROOT / 'scripts/fetch-vendor.py']:
             tar.add(path, arcname=str(path.relative_to(ROOT)))
     artifacts = [archive, sources, feed, dist / f'Resonance-{version}-universal.pkg']
     (dist / 'SHA256SUMS.txt').write_text(''.join(f'{hashlib.file_digest(path.open("rb"), "sha256").hexdigest()}  {path.name}\n' for path in artifacts))

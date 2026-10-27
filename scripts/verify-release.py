@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import subprocess
 import xml.etree.ElementTree as ET
+import tarfile
+from dependency_manifest import Manifest, SOURCE_COMPONENTS
 
 root = Path(__file__).resolve().parent.parent
 config = json.loads((root / 'Config/Release.json').read_text())
@@ -35,4 +37,12 @@ if key.exists():
 for line in (dist / 'SHA256SUMS.txt').read_text().splitlines():
     digest, filename = line.split('  ', 1)
     assert hashlib.file_digest((dist / filename).open('rb'), 'sha256').hexdigest() == digest
-print('PASS: signed archive, tamper rejection, signed appcast, versions, URLs and release checksums.')
+manifest = Manifest()
+with tarfile.open(dist / f'Resonance-{config["version"]}-third-party-sources.tar.xz') as sources:
+    for name in SOURCE_COMPONENTS:
+        member = str(manifest.cache_path(name).relative_to(root))
+        with sources.extractfile(member) as data:
+            assert hashlib.file_digest(data, 'sha256').hexdigest() == manifest.get(name).sha256
+    for required in ['scripts/dependency_manifest.py', 'vendor/manifest.json', 'Config/Release.json']:
+        assert sources.getmember(required).isfile()
+print('PASS: signed archive, tamper rejection, signed appcast, versions, URLs, checksums and corresponding sources.')

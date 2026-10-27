@@ -29,3 +29,5 @@ Il bitrate scelto non migliora la sorgente. Convertire in FLAC non recupera la q
 Codice GPL-3.0-or-later. Il repository contiene istruzioni, traduzioni, build riproducibili, test e workflow per le release. I componenti esterni conservano le loro licenze, incluse nell’app; le release contengono anche i sorgenti necessari delle build multimediali.
 
 Per compilazione, contributi e dettagli sugli aggiornamenti consulta [README](../README.md), [CONTRIBUTING](../CONTRIBUTING.md) e [RELEASING](RELEASING.md).
+
+Per aggiornare i componenti esterni ora basta modificare versione e checksum in `vendor/manifest.json`: gli script ricavano da lì tutti i riferimenti. La [guida alle dipendenze](DEPENDENCIES.md) include i passaggi e i controlli.

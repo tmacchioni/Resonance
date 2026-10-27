@@ -29,10 +29,13 @@ jobs:
           PY
       - name: Build dependencies and run checks
         run: |
+          python3 -m unittest discover -s Tests -p 'test_*.py'
+          python3 scripts/check-project.py
           brew install pkgconf cmake
           python3 scripts/fetch-vendor.py
           python3 scripts/build-media.py
           python3 scripts/build-runtime.py
+          swift package dump-package > .build/package-manifest.json
           python3 scripts/check-project.py
           python3 scripts/test.py
       - name: Import optional Apple signing credentials

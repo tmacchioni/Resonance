@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Reproducible static media tools; no vendor binary blobs or GPL-only codecs."""
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
-import tarfile
 import platform
+from dependency_manifest import Manifest
 
 ROOT = Path(__file__).resolve().parent.parent
-BUILD = ROOT / '.build/media'
-MANIFEST = json.loads((ROOT / 'vendor/manifest.json').read_text())
+MANIFEST = Manifest()
+RELEASE = json.loads((ROOT / 'Config/Release.json').read_text())
+RECIPE = MANIFEST.fingerprint(['ffmpeg', 'lame', 'opus'], Path(__file__).read_bytes() + RELEASE['minimum_macos'].encode())
 
 def run(args, cwd, env, log):
     with log.open('ab') as output:
@@ -22,33 +22,22 @@ def run(args, cwd, env, log):
         print(log.read_text(errors='replace')[-6000:])
         raise SystemExit(f'Build failed; see {log}')
 
-def extract(filename):
-    source = ROOT / 'vendor/cache' / filename
-    asset = next(a for a in MANIFEST['assets'] if a['file'] == filename)
-    if hashlib.file_digest(source.open('rb'), 'sha256').hexdigest() != asset['sha256']:
-        raise SystemExit(f'Checksum mismatch: {source}')
-    destination = ROOT / 'vendor/sources'
-    destination.mkdir(exist_ok=True)
-    with tarfile.open(source) as archive:
-        folder = destination / archive.getmembers()[0].name.split('/')[0]
-        if not folder.exists(): archive.extractall(destination, filter='data')
-    return folder
-
 def build(arch):
-    prefix = BUILD / arch / 'prefix'
+    workspace = ROOT / '.build/media' / arch / RECIPE
+    prefix = workspace / 'prefix'
     prefix.mkdir(parents=True, exist_ok=True)
     sdk = subprocess.check_output(['xcrun', '--show-sdk-path'], text=True).strip()
-    flags = f'-arch {arch} -mmacosx-version-min=13.0 -isysroot {sdk}'
+    flags = f'-arch {arch} -mmacosx-version-min={RELEASE["minimum_macos"]} -isysroot {sdk}'
     env = dict(os.environ, CC='clang', CFLAGS=flags, LDFLAGS=flags,
                PKG_CONFIG_PATH=str(prefix / 'lib/pkgconfig'), PKG_CONFIG_LIBDIR=str(prefix / 'lib/pkgconfig'))
     jobs = str(min(os.cpu_count() or 4, 8))
-    log = BUILD / arch / 'build.log'
-    for name, filename, extra in [
-        ('lame', 'lame-3.100.tar.gz', ['--disable-frontend', '--disable-decoder', '--disable-dependency-tracking']),
-        ('opus', 'opus-1.5.2.tar.gz', ['--disable-extra-programs', '--disable-doc', '--disable-intrinsics']),
+    log = workspace / 'build.log'
+    for name, extra in [
+        ('lame', ['--disable-frontend', '--disable-decoder', '--disable-dependency-tracking']),
+        ('opus', ['--disable-extra-programs', '--disable-doc', '--disable-intrinsics']),
     ]:
-        source = extract(filename)
-        target = BUILD / arch / name
+        source = MANIFEST.extract_source(name)
+        target = workspace / name
         target.mkdir(exist_ok=True)
         library = prefix / ('lib/libmp3lame.a' if name == 'lame' else 'lib/libopus.a')
         if not library.exists():
@@ -57,13 +46,13 @@ def build(arch):
             run([source / 'configure', f'--prefix={prefix}', f'--host={host}', '--disable-shared', '--enable-static', *extra], target, env, log)
             run(['make', '-j', jobs], target, env, log)
             run(['make', 'install'], target, env, log)
-    source = extract('ffmpeg-9.0.2.tar.xz')
-    target = BUILD / arch / 'ffmpeg'
+    source = MANIFEST.extract_source('ffmpeg')
+    target = workspace / 'ffmpeg'
     target.mkdir(exist_ok=True)
     output = ROOT / 'vendor/bin' / arch
     output.mkdir(parents=True, exist_ok=True)
     stamp = target / 'resonance-build.json'
-    recipe = hashlib.sha256(Path(__file__).read_bytes() + (ROOT / 'vendor/manifest.json').read_bytes()).hexdigest()
+    recipe = RECIPE
     if not stamp.exists() or json.loads(stamp.read_text()).get('recipe') != recipe:
         print(f'Building FFmpeg for {arch}…', flush=True)
         run([source / 'configure', f'--prefix={prefix}', '--target-os=darwin', f'--arch={arch}',
@@ -88,14 +77,14 @@ def build(arch):
         (output / name).chmod(0o755)
     licenses = ROOT / 'vendor/licenses'
     for path, name in [(source / 'COPYING.LGPLv2.1', 'FFmpeg-LGPLv2.1.txt'),
-                       (ROOT / 'vendor/sources/lame-3.100/COPYING', 'LAME-LGPL.txt'),
-                       (ROOT / 'vendor/sources/opus-1.5.2/COPYING', 'Opus-BSD.txt')]:
+                       (MANIFEST.extract_source('lame') / 'COPYING', 'LAME-LGPL.txt'),
+                       (MANIFEST.extract_source('opus') / 'COPYING', 'Opus-BSD.txt')]:
         shutil.copy2(path, licenses / name)
     with (licenses / f'ffmpeg-{arch}-build.txt').open('w') as output_file:
         if platform.machine() == arch:
             subprocess.run([str(output / 'ffmpeg'), '-version'], stdout=output_file, stderr=subprocess.STDOUT, check=True)
         else:
-            output_file.write(f'FFmpeg 9.0.2 / {arch}\nBuilt by scripts/build-media.py\n')
+            output_file.write(f'FFmpeg {MANIFEST.get("ffmpeg").version} / {arch}\nBuilt by scripts/build-media.py\n')
             output_file.write((target / 'ffbuild/config.mak').read_text())
     print(f'Media tools ready: {arch}', flush=True)
 

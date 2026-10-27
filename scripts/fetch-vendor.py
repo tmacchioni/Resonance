@@ -1,36 +1,48 @@
 #!/usr/bin/env python3
 """Fetch pinned standalone tools. No Python packages required."""
-import hashlib
-import json
 from pathlib import Path
 import shutil
 import subprocess
-import zipfile
 import tarfile
+import tempfile
+from dependency_manifest import Manifest, file_sha256
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / 'vendor/cache'
 
 def main():
     CACHE.mkdir(parents=True, exist_ok=True)
-    manifest = json.loads((ROOT / 'vendor/manifest.json').read_text())
-    for asset in manifest['assets']:
-        target = CACHE / asset['file']
+    manifest = Manifest()
+    for name, asset in manifest.dependencies.items():
+        target = manifest.cache_path(name)
+        target.parent.mkdir(parents=True, exist_ok=True)
         if not target.exists():
-            subprocess.run(['curl', '--location', '--fail', '--show-error', '--retry', '2', asset['url'], '-o', str(target)], check=True)
-        digest = hashlib.file_digest(target.open('rb'), 'sha256').hexdigest()
-        if digest != asset['sha256']:
-            raise SystemExit(f'Checksum mismatch for {target}. File not installed.')
-        print(asset['file'], 'verified', flush=True)
+            # Reuse the old flat cache only when its bytes match the new pin.
+            legacy = CACHE / asset.file
+            with tempfile.TemporaryDirectory(dir=target.parent) as directory:
+                pending = Path(directory) / 'download'
+                if legacy.is_file() and file_sha256(legacy) == asset.sha256:
+                    shutil.copy2(legacy, pending)
+                else:
+                    subprocess.run(['curl', '--location', '--fail', '--show-error', '--retry', '2', asset.url, '-o', str(pending)], check=True)
+                if file_sha256(pending) != asset.sha256:
+                    raise SystemExit(f'Checksum mismatch for {asset.file}. File not installed.')
+                pending.rename(target)
+        manifest.verified_archive(name)
+        print(asset.file, 'verified', flush=True)
     for arch in ['arm64', 'x86_64']:
         folder = ROOT / 'vendor/bin' / arch
         folder.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(CACHE / 'yt-dlp', folder / 'yt-dlp')
+        shutil.copy2(manifest.verified_archive('yt-dlp'), folder / 'yt-dlp')
         (folder / 'yt-dlp').chmod(0o755)
     sparkle = ROOT / 'vendor/sparkle'
-    sparkle.mkdir(exist_ok=True)
-    with tarfile.open(CACHE / 'Sparkle-2.10.1.tar.xz') as archive:
-        # Official macOS framework uses symlinks; extraction is limited to a pinned, verified archive.
-        archive.extractall(sparkle, filter='tar')
+    with tempfile.TemporaryDirectory(dir=sparkle.parent) as directory:
+        staging = Path(directory) / 'sparkle'
+        staging.mkdir()
+        with tarfile.open(manifest.verified_archive('sparkle')) as archive:
+            archive.extractall(staging, filter='data')
+        if not (staging / 'Sparkle.framework').is_dir(): raise SystemExit('Sparkle archive is missing its framework')
+        if sparkle.exists(): shutil.rmtree(sparkle)
+        staging.rename(sparkle)
 
 if __name__ == '__main__': main()

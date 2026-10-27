@@ -8,6 +8,7 @@ import plistlib
 import shutil
 import subprocess
 import sys
+from dependency_manifest import Manifest
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / 'dist'
@@ -94,6 +95,7 @@ def main():
     for lang in ['en', 'it']:
         shutil.copytree(ROOT / f'Sources/Resonance/Resources/{lang}.lproj', RESOURCES / f'{lang}.lproj')
     shutil.copytree(ROOT / 'vendor/licenses', RESOURCES / 'Licenses')
+    (RESOURCES / 'Licenses/Dependencies.json').write_text(json.dumps(Manifest().resolved(), indent=2) + '\n')
     shutil.copy2(sparkle / 'LICENSE', RESOURCES / 'Licenses/Sparkle.txt')
     shutil.copy2(ROOT / 'LICENSE', RESOURCES / 'Licenses/Resonance-GPLv3.txt')
     shutil.copy2(ROOT / 'README.md', RESOURCES / 'Guide.md')

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+from dependency_manifest import Manifest
 
 root = Path(__file__).resolve().parent.parent
 config = json.loads((root / 'Config/Release.json').read_text())
@@ -22,10 +23,7 @@ for language in ['it', 'en']:
 view = (root / 'Sources/Resonance/ContentView.swift').read_text()
 assert 'File scaricati' not in view
 assert 'Picker("Lingua"' in view
-manifest = json.loads((root / 'vendor/manifest.json').read_text())
-for asset in manifest['assets']:
-    assert asset['url'].startswith('https://')
-    assert re.fullmatch(r'[a-f0-9]{64}', asset['sha256'])
+manifest = Manifest()
 tracked = subprocess.run(['git', 'ls-files'], cwd=root, capture_output=True, text=True, check=True).stdout.splitlines()
 for path in tracked:
     assert not path.startswith(('.private/', 'research/', 'vendor/bin/', 'vendor/cache/', 'dist/')), path

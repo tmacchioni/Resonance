@@ -39,6 +39,7 @@ Build-time requirements: macOS with Apple Command Line Tools or Xcode, Python 3.
 
 ```sh
 brew install cmake pkgconf
+python3 -m unittest discover -s Tests -p 'test_*.py'
 python3 scripts/fetch-vendor.py
 python3 scripts/build-media.py
 python3 scripts/build-runtime.py
@@ -57,6 +58,8 @@ Outputs: `dist/Resonance.app`, universal installer `.pkg` and update `.zip`. The
 [Release guide](docs/RELEASING.md) describes signing, GitHub secrets and the tag-based release workflow. The app reads the signed `appcast.xml` attached to the latest stable GitHub release, then verifies the update archive against its embedded public key before extraction. Private keys are never shipped or committed.
 
 Dependencies are updated through reviewed app releases, not by silently downloading executable tools inside an installed app. Pinned versions and hashes live in `vendor/manifest.json`; CI and release workflows build and test the app. Dependency upgrades must update their corresponding-source assets and notices.
+
+To update a dependency, edit its version and SHA-256 in that manifest; filenames, URLs and source directory names use `{version}` templates. Custom upstream naming changes can be expressed in the same manifest. Fetching, source extraction, native builds, Swift Package Manager and release source archives all read this catalog. Download and build caches are separated by dependency fingerprints, so an update cannot silently reuse an older compiled library. See [updating dependencies](docs/DEPENDENCIES.md).
 
 ## Privacy
 

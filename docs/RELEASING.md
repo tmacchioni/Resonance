@@ -21,6 +21,8 @@ Do not regenerate an established project's key to fix a build error. Never put t
 
 ## Automated releases
 
+For external component updates, follow [DEPENDENCIES.md](DEPENDENCIES.md). Dependency versions have one source of truth in `vendor/manifest.json`.
+
 The `Publish release` workflow runs on `v*` tags. It checks that the tag matches the configured version, builds dependencies from pinned source archives, tests all formats, builds the universal app, creates and verifies Ed25519 archive signatures, signs the feed, packages corresponding sources, uploads all artifacts to a draft release, then publishes it as latest.
 
 ```sh
