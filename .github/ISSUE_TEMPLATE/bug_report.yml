@@ -1,0 +1,21 @@
+name: Bug report
+description: Report a reproducible problem
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Resonance version and macOS version
+      placeholder: 1.1.0 / macOS 15 / Apple Silicon
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce, expected result and actual result
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Relevant diagnostics
+      description: Remove personal paths, private playlist links and any credentials before sharing.

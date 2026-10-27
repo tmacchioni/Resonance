@@ -1,0 +1,7 @@
+{
+  "version": "1.1.0",
+  "build": "110",
+  "minimum_macos": "13.0",
+  "repository": "tmacchioni/Resonance",
+  "bundle_id": "it.resonance.mac"
+}

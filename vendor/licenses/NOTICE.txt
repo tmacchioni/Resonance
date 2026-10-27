@@ -1,0 +1,27 @@
+Resonance source code: GPL-3.0-or-later, copyright 2026 Resonance contributors.
+Third-party components retain their own licenses. They run separately or, for
+Sparkle, are linked as a framework.
+
+yt-dlp 2026.10.26: Unlicense with bundled third-party dependencies.
+Source: https://github.com/yt-dlp/yt-dlp/tree/2026.10.26
+See yt-dlp-Unlicense.txt and yt-dlp-third-party.txt for the standalone distribution.
+
+FFmpeg 9.0.2: LGPL-2.1-or-later in the included configuration (no GPL-only codecs).
+Source: https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz
+LAME 3.100: LGPL-2.0-or-later. Source: https://lame.sourceforge.io/
+Opus 1.5.2: BSD-style. Source: https://opus-codec.org/
+See the respective license files and ffmpeg-ARCH-build.txt for exact configuration.
+Pinned source archives and build recipes are attached to each release in the
+corresponding-source archive. These inputs reproduce the distributed media tools.
+
+QuickJS-ng 0.17.0: MIT.
+Source: https://github.com/quickjs-ng/quickjs/tree/v0.17.0
+See QuickJS-MIT.txt. Compiled with a macOS 13 deployment target for each CPU.
+
+Sparkle 2.10.1: BSD-style and included third-party notices.
+Source: https://github.com/sparkle-project/Sparkle/tree/2.10.1
+See Sparkle.txt in the packaged app and vendor/sparkle/LICENSE in a development tree.
+
+The complete dependency download URLs and SHA-256 hashes are in vendor/manifest.json.
+Spotify and YouTube are trademarks of their respective owners. Resonance is not
+affiliated with Spotify, YouTube, Google or Apple.
