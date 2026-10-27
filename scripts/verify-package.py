@@ -7,13 +7,16 @@ import plistlib
 import re
 import subprocess
 import tempfile
+import os
+import xml.etree.ElementTree as ET
 from dependency_manifest import Manifest
 
 root = Path(__file__).resolve().parent.parent
-app = root / 'dist/Resonance.app'
+dist = Path(os.environ.get('RESONANCE_DIST_DIR', root / 'dist'))
+app = dist / 'Resonance.app'
 tools = app / 'Contents/Resources/Tools'
 config = json.loads((root / 'Config/Release.json').read_text())
-pkg = root / f'dist/Resonance-{config["version"]}-universal.pkg'
+pkg = dist / f'Resonance-{config["version"]}-universal.pkg'
 
 def output(*args): return subprocess.check_output([str(a) for a in args], text=True)
 
@@ -54,4 +57,7 @@ with tempfile.TemporaryDirectory(prefix='resonance-pkg-check-') as folder:
     assert 'min="13.0"' in xml
     assert 'arm64,x86_64' in xml
     assert (expanded / 'Resonance-component.pkg/Payload').exists()
-print('PASS: universal executable, 8 tool entries, system-only libraries, macOS deployment targets, signatures, installer payload.')
+    package_info = ET.parse(expanded / 'Resonance-component.pkg/PackageInfo')
+    assert package_info.getroot().get('install-location') == '/'
+    assert not package_info.findall('.//relocate/bundle'), 'Installer must not relocate existing app copies'
+print('PASS: universal app, bundled tools, signatures and installer pinned to /Applications without relocation.')

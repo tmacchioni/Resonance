@@ -12,7 +12,7 @@ from dependency_manifest import Manifest, SOURCE_COMPONENTS
 
 root = Path(__file__).resolve().parent.parent
 config = json.loads((root / 'Config/Release.json').read_text())
-dist = root / 'dist'
+dist = Path(os.environ.get('RESONANCE_DIST_DIR', root / 'dist'))
 tree = ET.parse(dist / 'appcast.xml')
 ns = {'sparkle': 'http://www.andymatuschak.org/xml-namespaces/sparkle'}
 item = tree.find('./channel/item')

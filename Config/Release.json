@@ -1,6 +1,6 @@
 {
-  "version": "1.1.2",
-  "build": "112",
+  "version": "1.1.3",
+  "build": "113",
   "minimum_macos": "13.0",
   "repository": "tmacchioni/Resonance",
   "bundle_id": "it.resonance.mac"

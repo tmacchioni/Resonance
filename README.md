@@ -21,6 +21,8 @@ Only download content you own or have permission to download.
 
 Get the `.pkg` from [Releases](https://github.com/tmacchioni/Resonance/releases/latest) and open it to install in `/Applications`. Alternatively, unzip the app and move it to Applications.
 
+The installer disables bundle relocation so it always targets `/Applications/Resonance.app`, even if another copy exists in Downloads or a development folder. If an older installer updated a copy outside Applications, install version 1.1.3 or later to correct its location.
+
 Choose a source, paste a link, inspect the available items, choose output settings and download. The queue shows progress and lets you reveal finished files in Finder. **About → Automatically check for updates** controls update checking; **Resonance → Check for Updates…** checks manually.
 
 The initial public build is **signed ad hoc, not notarized by Apple**. Gatekeeper may require approval through System Settings → Privacy & Security. Apple Developer ID signing/notarization can be enabled by the maintainer; it is separate from the Ed25519 signatures used to authenticate updates. Never disable system protection globally.

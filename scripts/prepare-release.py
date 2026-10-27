@@ -22,7 +22,7 @@ def prepare():
     key = Path(os.environ.get('SPARKLE_KEY_FILE', ROOT / '.private/sparkle-private-key'))
     if not key.is_file(): raise SystemExit('Provide SPARKLE_KEY_FILE. Never commit the private signing key.')
     signer = ROOT / 'vendor/sparkle/bin/sign_update'
-    dist = ROOT / 'dist'
+    dist = Path(os.environ.get('RESONANCE_DIST_DIR', ROOT / 'dist'))
     archive = dist / f'Resonance-{version}-universal.zip'
     signature = subprocess.check_output([str(signer), '--ed-key-file', str(key), '-p', str(archive)], text=True).strip()
     rss = ET.Element('rss', version='2.0')

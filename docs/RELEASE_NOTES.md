@@ -1,11 +1,10 @@
-## Resonance 1.1.2
+## Resonance 1.1.3
 
-- Centralized external component versions, URLs and SHA-256 pins in a single manifest.
-- Isolated download and build caches so dependency upgrades cannot reuse stale libraries.
-- Generated dependency inventories and verification of the corresponding-source archive.
-- Clear release validation errors showing the tag and the version declared by its commit.
+- Fixed the package installer updating an existing app in Downloads instead of installing to `/Applications/Resonance.app`.
+- Disabled bundle relocation for the app and its nested Sparkle helpers.
+- Added a check of the generated package metadata to prevent this installation-path regression.
 
-This release includes the fixes intended for v1.1.1, whose publication stopped before producing any download assets. Existing v1.1.0 installations can update directly to v1.1.2.
+Existing installations can update directly to v1.1.3. To correct an app installed outside Applications by an older package, install the v1.1.3 package.
 
 macOS 13 or later, Intel and Apple Silicon. All runtime components are included.
 

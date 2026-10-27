@@ -57,6 +57,7 @@ jobs:
           try:
               subprocess.run(['python3', 'scripts/build.py'], env=env, check=True)
               subprocess.run(['python3', 'scripts/verify-package.py'], env=env, check=True)
+              subprocess.run(['python3', 'scripts/test-installation.py'], env=env, check=True)
               subprocess.run(['python3', 'scripts/prepare-release.py'], env=env, check=True)
               subprocess.run(['python3', 'scripts/verify-release.py'], env=env, check=True)
           finally:

@@ -9,9 +9,10 @@ import shutil
 import subprocess
 import sys
 from dependency_manifest import Manifest
+from installer_components import pin_components
 
 ROOT = Path(__file__).resolve().parent.parent
-DIST = ROOT / 'dist'
+DIST = Path(os.environ.get('RESONANCE_DIST_DIR', ROOT / 'dist'))
 BUILD = ROOT / '.build/distribution'
 APP = BUILD / 'root/Applications/Resonance.app'
 RESOURCES = APP / 'Contents/Resources'
@@ -113,8 +114,13 @@ def main():
     zip_file = DIST / f'Resonance-{VERSION}-universal.zip'
     run('ditto', '-c', '-k', '--sequesterRsrc', '--keepParent', APP, zip_file)
     component = BUILD / 'Resonance-component.pkg'
+    component_config = BUILD / 'components.plist'
+    if component_config.exists(): component_config.unlink()
+    run('pkgbuild', '--analyze', '--root', BUILD / 'root', component_config)
+    components = pin_components(plistlib.loads(component_config.read_bytes()))
+    component_config.write_bytes(plistlib.dumps(components))
     run('pkgbuild', '--root', BUILD / 'root', '--identifier', CONFIG['bundle_id'], '--version', VERSION,
-        '--install-location', '/', '--ownership', 'recommended', component)
+        '--install-location', '/', '--component-plist', component_config, '--ownership', 'recommended', component)
     distribution = BUILD / 'Distribution.xml'
     distribution.write_text(f'''<?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
